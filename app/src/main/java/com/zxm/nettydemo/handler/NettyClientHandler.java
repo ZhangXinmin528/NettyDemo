@@ -25,10 +25,17 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
 
     private List<OnDataReceiveListener> listeners = new ArrayList<>();
 
+    //注册
+    @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        super.channelRegistered(ctx);
+        Logger.d("channel-->[id=" + ctx.channel().id() + "]" + " registered");
+    }
+
     //该方法会在连接被建立并且准备通信时被调用
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " active");
+        Logger.d("channel-->[id=" + ctx.channel().id() + "]" + " active");
         super.channelActive(ctx);
     }
 
@@ -40,7 +47,7 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
         buf.readBytes(req);
         final String body = new String(req, "UTF-8");
         //需要和后台同事进行协商确定数据校验方法；
-        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "] start to read date:" + body);
+        Logger.d("channel-->[id=" + ctx.channel().id() + "] start to read date:" + body);
     }
 
     //出现异常时调用
@@ -49,16 +56,24 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
         super.exceptionCaught(ctx, cause);
         //把出现异常的关联channel关闭
         ctx.close();
-        Logger.e(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " got an exception:" + cause.getMessage());
+        Logger.e("channel-->[id=" + ctx.channel().id() + "]" + " got an exception:" + cause.getMessage());
         if (connectStatusListener != null) {
             connectStatusListener.onDisconnected();
         }
     }
 
+    //数据读取完毕
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         super.channelReadComplete(ctx);
-        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " read complete");
+        Logger.d("channel-->[id=" + ctx.channel().id() + "]" + " read complete");
+    }
+
+    //解除注册
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        super.channelUnregistered(ctx);
+        Logger.d("channel-->[id=" + ctx.channel().id() + "]" + " read complete");
     }
 
     /**

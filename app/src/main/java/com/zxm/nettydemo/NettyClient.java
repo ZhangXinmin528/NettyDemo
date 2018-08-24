@@ -78,7 +78,7 @@ public final class NettyClient implements INettyClient, OnConnectStatusListener 
                         mChannel = mBootstrap.connect(new InetSocketAddress(mHost, mPort))
                                 .sync().channel();
                     } catch (InterruptedException e) {
-                        Logger.e(TAG, "handle mesage..socket connected failed:" + e.getMessage());
+                        Logger.e("handle mesage..socket connected failed:" + e.getMessage());
                         e.printStackTrace();
                         //进行重新连接
                     }
@@ -88,7 +88,7 @@ public final class NettyClient implements INettyClient, OnConnectStatusListener 
                     if (bundle != null) {
                         final String content = bundle.getString(ACTION_SEND_MSG, "");
                         final int type = bundle.getInt(ACTION_SEND_TYPE, -1);
-                        Logger.d(TAG, "handle mesage..socket send message to server:content=[" + content + "] type=[" + type + "]");
+                        Logger.d("handle mesage..socket send message to server:content=[" + content + "] type=[" + type + "]");
 
                         if (mChannel != null && mChannel.isOpen()) {
                             try {
@@ -132,7 +132,7 @@ public final class NettyClient implements INettyClient, OnConnectStatusListener 
     public void onConnect(String host, int port) {
         mHost = host;
         mPort = port;
-        Logger.d(TAG, "onConnect()..Socket start to connect:host=[" + mHost + "] port=[" + port + "]");
+        Logger.d("onConnect()..Socket start to connect:host=[" + mHost + "] port=[" + port + "]");
         mWorkHandler.sendEmptyMessage(MESSAGE_CONNECT);
     }
 
@@ -141,7 +141,7 @@ public final class NettyClient implements INettyClient, OnConnectStatusListener 
         if (TextUtils.isEmpty(msg)) {
             return;
         }
-        Logger.d(TAG, "sendMessage()..socket send message to server:content=[" + msg + "] type=[" + mt + "]");
+        Logger.d("sendMessage()..socket send message to server:content=[" + msg + "] type=[" + mt + "]");
         Message message = Message.obtain();
         Bundle bundle = new Bundle();
         message.what = MESSAGE_SEND;
@@ -153,7 +153,7 @@ public final class NettyClient implements INettyClient, OnConnectStatusListener 
 
     @Override
     public void onReconnect() {
-        Logger.d(TAG, "onReconnect()..Socket on reconnect!");
+        Logger.d("onReconnect()..Socket on reconnect!");
         mWorkHandler.sendEmptyMessageDelayed(MESSAGE_CONNECT, Constant.DELAY_MILLIS);
     }
 
@@ -166,7 +166,7 @@ public final class NettyClient implements INettyClient, OnConnectStatusListener 
 
     @Override
     public void onDisconnected() {
-        Logger.d(TAG, "onDisconnected()..Socket disconnect!");
+        Logger.d("onDisconnected()..Socket disconnect!");
         //重新建立连接
         onReconnect();
     }
