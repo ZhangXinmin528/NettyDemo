@@ -9,27 +9,44 @@ import com.zxm.nettydemo.listener.OnDataReceiveListener;
  * Copyright (c) 2018 . All rights reserved.
  */
 public interface INettyClient {
+
     /**
-     * Client build the connection with the server;
+     * Configure socket client
      *
      * @param host
      * @param port
+     * @return INettyClient
      */
-    void onConnect(String host, int port);
-
-    /**
-     * Client send message to server.
-     *
-     * @param mt
-     * @param msg
-     * @param delayed
-     */
-    void sendMessage(int mt, String msg, long delayed);
+    INettyClient onConfig(String host, int port);
 
     /**
      * Client build the connection with the server;
+     *
+     * @return INettyClient
      */
-    void onReconnect();
+    INettyClient onConnect();
+
+    /**
+     * Client build the connection with the server;
+     *
+     * @return INettyClient
+     */
+    INettyClient onReconnect();
+
+    /**
+     * send command to server
+     *
+     * @param command
+     * @return
+     */
+    INettyClient onPostCommand(int command);
+
+    /**
+     * initiatively cut down the connection between the C/S
+     *
+     * @return INettyClient
+     */
+    INettyClient onClose();
 
     /**
      * 添加数据接收监听器

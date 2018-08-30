@@ -29,8 +29,8 @@
             android:ems="15"
             android:hint="例如：192.168.1.1"
             android:inputType="text"
-            android:textSize="14sp"
             android:text="119.253.83.248"
+            android:textSize="14sp"
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
@@ -57,8 +57,8 @@
             android:layout_weight="1"
             android:ems="10"
             android:hint="8080"
-            android:text="8080"
             android:inputType="number"
+            android:text="8080"
             android:textSize="14sp"
             tools:ignore="HardcodedText" />
     </LinearLayout>
@@ -109,12 +109,21 @@
 
         <!--断开连接-->
         <Button
-            android:id="@+id/btn_build_disconnect"
+            android:id="@+id/btn_build_close"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="12dp"
             android:layout_marginRight="12dp"
             android:text="@string/btn_build_disconnect" />
+
+        <!--重新连接-->
+        <Button
+            android:id="@+id/btn_build_reconnect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="12dp"
+            android:text="@string/btn_build_reconnect" />
 
     </LinearLayout>
 
@@ -128,12 +137,12 @@
 
         <!--发送消息-->
         <Button
-            android:id="@+id/btn_build_send_msg"
+            android:id="@+id/btn_start"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="12dp"
             android:layout_marginRight="12dp"
-            android:text="@string/btn_build_send_msg" />
+            android:text="@string/btn_start" />
 
         <!--接收消息-->
         <Button

@@ -1,110 +1,63 @@
 package com.zxm.nettydemo;
 
-import android.nfc.Tag;
-import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
-import android.os.Message;
-import android.print.PrinterId;
-import android.text.InputFilter;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
-import android.widget.PopupMenu;
 
 import com.zxm.nettydemo.handler.NettyClientHandler;
 import com.zxm.nettydemo.listener.OnConnectStatusListener;
 import com.zxm.nettydemo.listener.OnDataReceiveListener;
+import com.zxm.nettydemo.util.FormatUtil;
 import com.zxm.nettydemo.util.Logger;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 
+import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManager;
+
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.CharsetUtil;
 
 /**
  * Created by ZhangXinmin on 2018/8/23.
  * Copyright (c) 2018 . All rights reserved.
+ * 1.Please confirm the network is available before use it.使用之前确认网络已连接
  */
-public final class NettyClient implements INettyClient, OnConnectStatusListener {
+public final class NettyClient implements INettyClient {
     private static final String TAG = NettyClient.class.getSimpleName();
-    private final String ACTION_SEND_TYPE = "action_send_type";
-    private final String ACTION_SEND_MSG = "action_send_msg";
-    private final int MESSAGE_INIT = 0x1;
-    private final int MESSAGE_CONNECT = 0x2;
-    private final int MESSAGE_SEND = 0x3;
 
+    private static final boolean SSL = System.getProperty("ssl") != null;
+    private SslContext sslCtx;
     //bootstrap a Channel
     private Bootstrap mBootstrap;
     //capable of I/O operations
     private Channel mChannel;
+    private EventLoopGroup mEventLoopGroup;
     private String mHost;
     private int mPort;
-    private HandlerThread workThread;
-    private Handler mWorkHandler;
     private NettyClientHandler mClientHandler;
 
-    private Handler.Callback mWorkHandlerCallback = new Handler.Callback() {
-        @Override
-        public boolean handleMessage(Message msg) {
-            switch (msg.what) {
-                case MESSAGE_INIT:
-                    NioEventLoopGroup group = new NioEventLoopGroup();
-                    mBootstrap = new Bootstrap();
-                    mBootstrap.channel(NioSocketChannel.class);
-                    mBootstrap.group(group);
-                    mBootstrap.handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel ch) throws Exception {
-                            ChannelPipeline pipeline = ch.pipeline();
-                            pipeline.addLast("encoder", new StringEncoder(CharsetUtil.UTF_8));
-                            pipeline.addLast(new LineBasedFrameDecoder(Integer.MAX_VALUE));
-                            pipeline.addLast(mClientHandler);
-
-                        }
-                    });
-                    break;
-                case MESSAGE_CONNECT:
-                    if (TextUtils.isEmpty(mHost) || mPort == 0) {
-                        throw new RuntimeException("Socket host or port is illegal!");
-                    }
-                    try {
-                        mChannel = mBootstrap.connect(new InetSocketAddress(mHost, mPort))
-                                .sync().channel();
-                    } catch (InterruptedException e) {
-                        Logger.e("handle mesage..socket connected failed:" + e.getMessage());
-                        e.printStackTrace();
-                        //进行重新连接
-                    }
-                    break;
-                case MESSAGE_SEND:
-                    final Bundle bundle = msg.getData();
-                    if (bundle != null) {
-                        final String content = bundle.getString(ACTION_SEND_MSG, "");
-                        final int type = bundle.getInt(ACTION_SEND_TYPE, -1);
-                        Logger.d("handle mesage..socket send message to server:content=[" + content + "] type=[" + type + "]");
-
-                        if (mChannel != null && mChannel.isOpen()) {
-                            try {
-                                //需要和后台协商数据传输方式
-                                mChannel.writeAndFlush(content).sync();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                                Logger.e(TAG, "Socket send message failed!");
-                            }
-                        }
-                    }
-                    break;
-            }
-            return true;
-        }
-    };
     private static NettyClient INSTANCE;
 
     public static synchronized NettyClient getInstance() {
@@ -119,42 +72,177 @@ public final class NettyClient implements INettyClient, OnConnectStatusListener 
     }
 
     private void initParams() {
-        workThread = new HandlerThread(NettyClient.class.getName());
-        workThread.start();
-        mWorkHandler = new Handler(workThread.getLooper(), mWorkHandlerCallback);
+
+        if (SSL) {
+            try {
+                sslCtx = SslContextBuilder.forClient()
+                        .trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+            } catch (SSLException e) {
+                e.printStackTrace();
+                sslCtx = null;
+            }
+        } else {
+            sslCtx = null;
+        }
         mClientHandler = new NettyClientHandler();
+
+    }
+
+    /**
+     * 设置连接状态监听
+     * 在onConfig之前调用该方法
+     *
+     * @param connectStatusListener
+     */
+    public INettyClient setConnectStatusListener(@NonNull OnConnectStatusListener connectStatusListener) {
         //添加连接状态监听
-        mClientHandler.setConnectStatusListener(this);
-        mWorkHandler.sendEmptyMessage(MESSAGE_INIT);
+        mClientHandler.setConnectStatusListener(connectStatusListener);
+        return this;
     }
 
     @Override
-    public void onConnect(String host, int port) {
+    public INettyClient onConfig(String host, int port) {
         mHost = host;
         mPort = port;
-        Logger.d("onConnect()..Socket start to connect:host=[" + mHost + "] port=[" + port + "]");
-        mWorkHandler.sendEmptyMessage(MESSAGE_CONNECT);
+        Logger.d("onConnected()..Socket start to connect:host=[" + mHost + "] port=[" + port + "]");
+        //configure
+        mEventLoopGroup = new NioEventLoopGroup();
+        mBootstrap = new Bootstrap();
+        mBootstrap.group(mEventLoopGroup);
+//        mBootstrap.option(ChannelOption.TCP_NODELAY,true);//使用一次大数据
+        mBootstrap.option(ChannelOption.SO_KEEPALIVE, true);//实现长连接
+        //连接超时时间
+        mBootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000);
+        //指定NIO方式
+        mBootstrap.channel(NioSocketChannel.class);
+        mBootstrap.handler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+                if (sslCtx != null) {
+                    pipeline.addLast(sslCtx.newHandler(ch.alloc(), mHost, mPort));
+                }
+                pipeline.addLast("encoder", new StringEncoder(CharsetUtil.UTF_8));
+//                pipeline.addLast(new LineBasedFrameDecoder(Integer.MAX_VALUE));
+                pipeline.addLast(new StringDecoder(CharsetUtil.UTF_8));
+                pipeline.addLast(new StringEncoder(CharsetUtil.UTF_8));
+                pipeline.addLast(mClientHandler);
+            }
+        });
+        return this;
     }
 
     @Override
-    public void sendMessage(int mt, String msg, long delayed) {
-        if (TextUtils.isEmpty(msg)) {
-            return;
+    public INettyClient onConnect() {
+        //start client
+        if (TextUtils.isEmpty(mHost) || mPort == 0) {
+            Logger.e("Please configure socket host and port!");
+            throw new RuntimeException("Socket host or port is illegal!");
         }
-        Logger.d("sendMessage()..socket send message to server:content=[" + msg + "] type=[" + mt + "]");
-        Message message = Message.obtain();
-        Bundle bundle = new Bundle();
-        message.what = MESSAGE_SEND;
-        bundle.putString(ACTION_SEND_MSG, msg);
-        bundle.putInt(ACTION_SEND_TYPE, mt);
-        message.setData(bundle);
-        mWorkHandler.sendMessageDelayed(message, delayed);
+        new Handler()
+                .post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            mBootstrap.connect(new InetSocketAddress(mHost, mPort))
+                                    .addListener(new ChannelFutureListener() {
+                                        @Override
+                                        public void operationComplete(ChannelFuture future) throws Exception {
+                                            if (future != null) {
+                                                if (future.isSuccess()) {
+                                                    mChannel = future.channel();
+                                                    //连接成功
+                                                    Logger.d("socket connected success:isActive()?-->"
+                                                            + mChannel.isActive());
+
+                                                } else {
+                                                    //连接失败
+                                                    Logger.d(TAG, "socket connected failed");
+                                                }
+                                            }
+                                        }
+                                    })
+                                    .sync();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Logger.e("onConnected()..socket connected failed:" + e.getMessage());
+                        }
+                    }
+                });
+
+        return this;
     }
 
     @Override
-    public void onReconnect() {
-        Logger.d("onReconnect()..Socket on reconnect!");
-        mWorkHandler.sendEmptyMessageDelayed(MESSAGE_CONNECT, Constant.DELAY_MILLIS);
+    public INettyClient onReconnect() {
+        Logger.d("onReconnect()");
+        if (mChannel != null) {
+            mChannel = null;
+        }
+        try {
+
+            mChannel = mBootstrap.connect(new InetSocketAddress(mHost, mPort))
+                    .sync().channel();
+
+            if (mChannel != null && mChannel.isOpen()) {
+                Logger.d("onReconnect()..socket reconnect success..isActive()?-->" + mChannel.isActive());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Logger.d("onReconnect()..socket reconnected failed:" + e.getMessage());
+        }
+
+        return this;
+    }
+
+    @Override
+    public INettyClient onPostCommand(final int command) {
+        if (mChannel != null) {
+            //获取十六进制串
+            final String temp = FormatUtil.algorismToHEXString(command);
+            final byte[] b = FormatUtil.hex2byte(temp);
+            final ByteBuf msg = Unpooled.buffer(b.length);
+            msg.writeBytes(b);
+            //结束
+            mChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (future != null && future.isSuccess()) {
+                        Logger.d("onPostCommand()..command[" + command + "] success");
+                    }
+                }
+            });
+        }
+        return this;
+    }
+
+    //主动关闭连接
+    @Override
+    public INettyClient onClose() {
+        Logger.d("onClose()..Socket is going to close..isOpen()?-->" + (mChannel == null ? null : mChannel.isOpen()));
+        new Handler()
+                .post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (mChannel != null && mChannel.isOpen()) {
+                                mChannel.close().sync();
+//                                mChannel.closeFuture().sync();//谨慎会ANR
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } finally {
+                            // Shut down the event loop to terminate all threads.
+                            //因为有重连不需要此操作
+                            /*if (mEventLoopGroup != null) {
+                                Logger.d("onClose()..shutdownGracefully");
+                                mEventLoopGroup.shutdownGracefully();
+                            }*/
+                        }
+                    }
+                });
+
+        return this;
     }
 
     @Override
@@ -162,12 +250,5 @@ public final class NettyClient implements INettyClient, OnConnectStatusListener 
         if (mClientHandler != null) {
             mClientHandler.addDataReceiveListener(listener);
         }
-    }
-
-    @Override
-    public void onDisconnected() {
-        Logger.d("onDisconnected()..Socket disconnect!");
-        //重新建立连接
-        onReconnect();
     }
 }

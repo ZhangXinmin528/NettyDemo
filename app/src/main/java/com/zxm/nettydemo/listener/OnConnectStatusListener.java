@@ -6,5 +6,18 @@ package com.zxm.nettydemo.listener;
  * 连接异常时触发
  */
 public interface OnConnectStatusListener {
+    /**
+     * 开始通信
+     */
+    void onConnected();
+
+    /**
+     * 开始接收数据
+     */
+    void onReceiveData();
+
+    /**
+     * 断开通信
+     */
     void onDisconnected();
 }

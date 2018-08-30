@@ -1,7 +1,5 @@
 package com.zxm.nettydemo.handler;
 
-import android.support.annotation.IdRes;
-
 import com.zxm.nettydemo.listener.OnConnectStatusListener;
 import com.zxm.nettydemo.listener.OnDataReceiveListener;
 import com.zxm.nettydemo.util.Logger;
@@ -10,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
@@ -18,6 +17,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * Copyright (c) 2018 . All rights reserved.
  * 处理客户端发往服务器的报文，执行编解码，读取客户端数据，进行业务处理；
  */
+@ChannelHandler.Sharable
 public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     private static final String TAG = NettyClientHandler.class.getSimpleName();
 
@@ -25,29 +25,54 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
 
     private List<OnDataReceiveListener> listeners = new ArrayList<>();
 
+    public NettyClientHandler() {
+    }
+
+    public NettyClientHandler(OnConnectStatusListener connectStatusListener) {
+        this.connectStatusListener = connectStatusListener;
+    }
+
     //注册
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         super.channelRegistered(ctx);
-        Logger.d("channel-->[id=" + ctx.channel().id() + "]" + " registered");
+        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " registered");
     }
 
     //该方法会在连接被建立并且准备通信时被调用
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        Logger.d("channel-->[id=" + ctx.channel().id() + "]" + " active");
+        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " active");
+//        ctx.writeAndFlush(0x7FED0101);
         super.channelActive(ctx);
+        if (connectStatusListener != null) {
+            connectStatusListener.onConnected();
+
+        }
     }
 
-    //该方法在接收数据时调用
+    //该方法在接收服务端数据时调用
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ByteBuf buf = (ByteBuf) msg;
         byte[] req = new byte[buf.readableBytes()];
         buf.readBytes(req);
-        final String body = new String(req, "UTF-8");
+        final String result = new String(buf.array());
         //需要和后台同事进行协商确定数据校验方法；
-        Logger.d("channel-->[id=" + ctx.channel().id() + "] start to read date:" + body);
+        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "] start to read date:"+result);
+        if (connectStatusListener != null) {
+            connectStatusListener.onReceiveData();
+        }
+    }
+
+    //断开连接：客户端或者服务器断开连接时会调用
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "] socket channel is inactive");
+        if (connectStatusListener != null) {
+            connectStatusListener.onDisconnected();
+        }
     }
 
     //出现异常时调用
@@ -56,7 +81,7 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
         super.exceptionCaught(ctx, cause);
         //把出现异常的关联channel关闭
         ctx.close();
-        Logger.e("channel-->[id=" + ctx.channel().id() + "]" + " got an exception:" + cause.getMessage());
+        Logger.e(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " got an exception:" + cause.getMessage());
         if (connectStatusListener != null) {
             connectStatusListener.onDisconnected();
         }
@@ -66,14 +91,22 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         super.channelReadComplete(ctx);
-        Logger.d("channel-->[id=" + ctx.channel().id() + "]" + " read complete");
+        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " read complete");
     }
 
     //解除注册
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
         super.channelUnregistered(ctx);
-        Logger.d("channel-->[id=" + ctx.channel().id() + "]" + " read complete");
+        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " unregistered");
+    }
+
+    //心跳超时事件：
+    //当客户端所有ChannelHandler指定时间内没有write事件时，会触发该方法。
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        super.userEventTriggered(ctx, evt);
+        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " user event triggered");
     }
 
     /**

@@ -7,7 +7,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.util.concurrent.Executors;
+import com.zxm.nettydemo.listener.SimpleOnConnectStatusListener;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -39,9 +39,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mPortEt = findViewById(R.id.et_inout_port);
         mMsgEt = findViewById(R.id.et_inout_msg);
         findViewById(R.id.btn_build_connect).setOnClickListener(this);
-        findViewById(R.id.btn_build_disconnect).setOnClickListener(this);
-        findViewById(R.id.btn_build_send_msg).setOnClickListener(this);
+        findViewById(R.id.btn_build_close).setOnClickListener(this);
+        findViewById(R.id.btn_start).setOnClickListener(this);
         findViewById(R.id.btn_build_receive_msg).setOnClickListener(this);
+        findViewById(R.id.btn_build_reconnect).setOnClickListener(this);
 
         mInfoTv = findViewById(R.id.tv_info);
     }
@@ -53,15 +54,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //客户端并建立连接
                 final String ip = mIpEt.getText().toString().trim();
                 final String port = mPortEt.getText().toString().trim();
-//                NettyClient.getInstance()
-//                        .onConnect("10.136.192.135",8081);
                 NettyClient.getInstance()
-                        .onConnect(ip,Integer.parseInt(port));
+                        .setConnectStatusListener(new SimpleOnConnectStatusListener() {
+                            @Override
+                            public void onReceiveData() {
+                                super.onReceiveData();
+                            }
+                        })
+                        .onConfig(ip, Integer.parseInt(port))
+                        .onConnect();
+                /*NettyClient.getInstance()
+                        .setConnectStatusListener(new SimpleOnConnectStatusListener() {
+                            @Override
+                            public void onReceiveData() {
+                                super.onReceiveData();
+                            }
+                        })
+                        .onConfig("10.136.192.255", 8081)
+                        .onConnect();*/
                 break;
-            case R.id.btn_build_disconnect:
+            //断开连接
+            case R.id.btn_build_close:
+                NettyClient.getInstance().onClose();
                 break;
-            case R.id.btn_build_send_msg:
-                //发送消息到服务器
+            //重新连接
+            case R.id.btn_build_reconnect:
+                NettyClient.getInstance().onReconnect();
+                break;
+            case R.id.btn_start://发送开始命令
+//                NettyClient.getInstance().onPostCommand("hello");
+                NettyClient.getInstance().onPostCommand(Constant.CMD_START);
                 break;
             case R.id.btn_build_receive_msg:
                 //接收服务器消息
