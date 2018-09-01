@@ -122,10 +122,7 @@ public final class NettyClient implements INettyClient {
                 if (sslCtx != null) {
                     pipeline.addLast(sslCtx.newHandler(ch.alloc(), mHost, mPort));
                 }
-                pipeline.addLast("encoder", new StringEncoder(CharsetUtil.UTF_8));
-//                pipeline.addLast(new LineBasedFrameDecoder(Integer.MAX_VALUE));
-                pipeline.addLast(new StringDecoder(CharsetUtil.UTF_8));
-                pipeline.addLast(new StringEncoder(CharsetUtil.UTF_8));
+//                pipeline.addLast( new StringEncoder(CharsetUtil.UTF_8));
                 pipeline.addLast(mClientHandler);
             }
         });
@@ -243,6 +240,22 @@ public final class NettyClient implements INettyClient {
                 });
 
         return this;
+    }
+
+    @Override
+    public void onShutDown() {
+        Logger.d("onShutDown()");
+        if (mChannel != null && mChannel.isOpen()) {
+            try {
+                mChannel.close().sync();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if (mEventLoopGroup != null) {
+            Logger.d("onShutDown()..shutdownGracefully");
+            mEventLoopGroup.shutdownGracefully();
+        }
     }
 
     @Override

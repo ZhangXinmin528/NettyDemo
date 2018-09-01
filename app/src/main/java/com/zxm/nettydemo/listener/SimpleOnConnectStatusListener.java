@@ -11,7 +11,7 @@ public class SimpleOnConnectStatusListener implements OnConnectStatusListener {
     }
 
     @Override
-    public void onReceiveData() {
+    public void onReceiveData(String data) {
 
     }
 

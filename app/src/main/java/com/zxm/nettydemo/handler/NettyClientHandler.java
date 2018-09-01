@@ -2,9 +2,11 @@ package com.zxm.nettydemo.handler;
 
 import com.zxm.nettydemo.listener.OnConnectStatusListener;
 import com.zxm.nettydemo.listener.OnDataReceiveListener;
+import com.zxm.nettydemo.util.FormatUtil;
 import com.zxm.nettydemo.util.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
@@ -54,14 +56,15 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     //该方法在接收服务端数据时调用
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        ByteBuf buf = (ByteBuf) msg;
-        byte[] req = new byte[buf.readableBytes()];
-        buf.readBytes(req);
-        final String result = new String(buf.array());
-        //需要和后台同事进行协商确定数据校验方法；
-        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "] start to read date:"+result);
+        final ByteBuf byteBuf = (ByteBuf) msg;
+        Logger.e(TAG, "数据类型：" + msg.getClass().getSimpleName());
+        final byte[] b = new byte[byteBuf.readableBytes()];
+        byteBuf.readBytes(b);
+        Logger.e(TAG, "获取的byte数据：" + Arrays.toString(b));
+        final String command = FormatUtil.byte2hex(b);
+        Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "] start to read date:" + command);
         if (connectStatusListener != null) {
-            connectStatusListener.onReceiveData();
+            connectStatusListener.onReceiveData(command);
         }
     }
 

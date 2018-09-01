@@ -49,6 +49,14 @@ public interface INettyClient {
     INettyClient onClose();
 
     /**
+     * Shut down the event loop to terminate all threads.
+     * <p>
+     * Notice:You must do this.
+     * </p>
+     */
+    void onShutDown();
+
+    /**
      * 添加数据接收监听器
      *
      * @param listener

@@ -11,6 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/white"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:paddingEnd="12dp"
         android:paddingStart="12dp">
 
@@ -29,7 +31,7 @@
             android:ems="15"
             android:hint="例如：192.168.1.1"
             android:inputType="text"
-            android:text="119.253.83.248"
+            android:text="10.136.193.39"
             android:textSize="14sp"
             tools:ignore="HardcodedText" />
     </LinearLayout>
@@ -91,6 +93,7 @@
             tools:ignore="HardcodedText" />
     </LinearLayout>
 
+    <!--客户端操作-->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -121,10 +124,36 @@
             android:id="@+id/btn_build_reconnect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
             android:text="@string/btn_build_reconnect" />
 
+    </LinearLayout>
+    <!--发送命令-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:background="@android:color/white"
+        android:gravity="center_horizontal"
+        android:paddingBottom="12dp"
+        android:paddingTop="12dp">
+
+        <!--发送开始命令-->
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="12dp"
+            android:text="@string/btn_start"
+            tools:ignore="RtlHardcoded" />
+
+        <!--发送退出命令-->
+        <Button
+            android:id="@+id/btn_exit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:text="@string/btn_exit"
+            tools:ignore="RtlHardcoded" />
     </LinearLayout>
 
     <LinearLayout
@@ -134,15 +163,6 @@
         android:background="@android:color/white"
         android:gravity="center_horizontal"
         android:paddingBottom="12dp">
-
-        <!--发送消息-->
-        <Button
-            android:id="@+id/btn_start"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="12dp"
-            android:layout_marginRight="12dp"
-            android:text="@string/btn_start" />
 
         <!--接收消息-->
         <Button

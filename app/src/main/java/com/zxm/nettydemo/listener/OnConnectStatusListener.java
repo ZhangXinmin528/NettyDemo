@@ -14,7 +14,7 @@ public interface OnConnectStatusListener {
     /**
      * 开始接收数据
      */
-    void onReceiveData();
+    void onReceiveData(String data);
 
     /**
      * 断开通信
