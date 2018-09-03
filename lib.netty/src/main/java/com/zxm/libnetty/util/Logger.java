@@ -1,8 +1,8 @@
-package com.zxm.nettydemo.util;
+package com.zxm.libnetty.util;
 
 import android.util.Log;
 
-import com.zxm.nettydemo.BuildConfig;
+import com.zxm.libnetty.BuildConfig;
 
 
 /**

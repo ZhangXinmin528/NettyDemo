@@ -1,8 +1,6 @@
-package com.zxm.nettydemo;
+package com.zxm.libnetty;
 
-import android.telephony.VisualVoicemailService;
-
-import com.zxm.nettydemo.listener.OnDataReceiveListener;
+import com.zxm.libnetty.listener.OnDataReceiveListener;
 
 /**
  * Created by ZhangXinmin on 2018/8/23.

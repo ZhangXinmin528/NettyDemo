@@ -1,9 +1,9 @@
-package com.zxm.nettydemo.handler;
+package com.zxm.libnetty.handler;
 
-import com.zxm.nettydemo.listener.OnConnectStatusListener;
-import com.zxm.nettydemo.listener.OnDataReceiveListener;
-import com.zxm.nettydemo.util.FormatUtil;
-import com.zxm.nettydemo.util.Logger;
+import com.zxm.libnetty.listener.OnConnectStatusListener;
+import com.zxm.libnetty.listener.OnDataReceiveListener;
+import com.zxm.libnetty.util.FormatUtil;
+import com.zxm.libnetty.util.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;

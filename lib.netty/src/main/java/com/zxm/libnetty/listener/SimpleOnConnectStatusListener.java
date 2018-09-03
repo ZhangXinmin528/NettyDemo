@@ -1,4 +1,4 @@
-package com.zxm.nettydemo.listener;
+package com.zxm.libnetty.listener;
 
 /**
  * Created by ZhangXinmin on 2018/8/28.

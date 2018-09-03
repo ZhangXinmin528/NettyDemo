@@ -1,22 +1,18 @@
-package com.zxm.nettydemo;
+package com.zxm.libnetty;
 
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import com.zxm.nettydemo.handler.NettyClientHandler;
-import com.zxm.nettydemo.listener.OnConnectStatusListener;
-import com.zxm.nettydemo.listener.OnDataReceiveListener;
-import com.zxm.nettydemo.util.FormatUtil;
-import com.zxm.nettydemo.util.Logger;
+import com.zxm.libnetty.handler.NettyClientHandler;
+import com.zxm.libnetty.listener.OnConnectStatusListener;
+import com.zxm.libnetty.listener.OnDataReceiveListener;
+import com.zxm.libnetty.util.FormatUtil;
+import com.zxm.libnetty.util.Logger;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 
 import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManager;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
@@ -31,13 +27,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.util.CharsetUtil;
 
 /**
  * Created by ZhangXinmin on 2018/8/23.

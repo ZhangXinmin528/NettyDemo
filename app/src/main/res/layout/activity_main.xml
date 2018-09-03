@@ -31,7 +31,7 @@
             android:ems="15"
             android:hint="例如：192.168.1.1"
             android:inputType="text"
-            android:text="10.136.193.39"
+            android:text="119.253.83.248"
             android:textSize="14sp"
             tools:ignore="HardcodedText" />
     </LinearLayout>

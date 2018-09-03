@@ -1,18 +1,19 @@
 package com.zxm.nettydemo;
 
 import android.content.Context;
-import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.zxm.nettydemo.listener.SimpleOnConnectStatusListener;
-import com.zxm.nettydemo.util.Logger;
+import com.zxm.libnetty.Constant;
+import com.zxm.libnetty.NettyClient;
+import com.zxm.libnetty.listener.SimpleOnConnectStatusListener;
+import com.zxm.libnetty.util.Logger;
 
-import static com.zxm.nettydemo.Constant.*;
+import static com.zxm.libnetty.Constant.*;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //客户端并建立连接
                 final String ip = mIpEt.getText().toString().trim();
                 final String port = mPortEt.getText().toString().trim();
+
                 NettyClient.getInstance()
                         .setConnectStatusListener(new SimpleOnConnectStatusListener() {
                             @Override
@@ -66,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 dispatchCommand(data);
                             }
                         })
-                        .onConfig(ip, Integer.parseInt(port))
+                        .onConfig(Config.CONFIG_HOST, Config.CONFIG_PORT)
                         .onConnect();
                 break;
             //断开连接

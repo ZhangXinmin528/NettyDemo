@@ -1,4 +1,4 @@
-package com.zxm.nettydemo;
+package com.zxm.libnetty;
 
 /**
  * Created by ZhangXinmin on 2018/8/23.
