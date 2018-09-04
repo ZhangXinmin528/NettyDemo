@@ -1,5 +1,6 @@
 package com.zxm.libnetty;
 
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -8,6 +9,7 @@ import com.zxm.libnetty.handler.NettyClientHandler;
 import com.zxm.libnetty.listener.OnConnectStatusListener;
 import com.zxm.libnetty.listener.OnDataReceiveListener;
 import com.zxm.libnetty.util.FormatUtil;
+import com.zxm.libnetty.util.HeartUtil;
 import com.zxm.libnetty.util.Logger;
 
 import java.net.InetSocketAddress;
@@ -198,6 +200,38 @@ public final class NettyClient implements INettyClient {
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future != null && future.isSuccess()) {
                         Logger.d("onPostCommand()..command[" + command + "] success");
+                    }
+                }
+            });
+        }
+        return this;
+    }
+
+    /**
+     * 发送人脸帧图片
+     *
+     * @param face
+     * @return
+     */
+    public INettyClient onPostFaceFrame(@NonNull final Bitmap face) {
+
+        if (mChannel != null && face != null) {
+            final int width = face.getWidth();
+            final int height = face.getHeight();
+            Logger.d("onPostFaceFrame()..width:" + width + "..height:" + height);
+            final byte[] pic = HeartUtil.bitmap2Bytes(face, Bitmap.CompressFormat.JPEG);
+            final int faceLength = pic.length;
+            Logger.d("onPostFaceFrame()..faceLength:" + faceLength);
+            ByteBuf buf = Unpooled.buffer(faceLength + 4 + 2 * 2);
+            buf.writeInt(faceLength);//图片
+            buf.writeShort(width);//图片宽度
+            buf.writeShort(height);//图片高度
+            buf.writeBytes(pic);
+            mChannel.writeAndFlush(buf).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (future != null && future.isSuccess()) {
+                        Logger.d("onPostFaceFrame()..success");
                     }
                 }
             });

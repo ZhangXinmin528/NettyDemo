@@ -1,6 +1,8 @@
 package com.zxm.nettydemo;
 
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -10,7 +12,12 @@ import android.widget.TextView;
 import com.zxm.libnetty.Constant;
 import com.zxm.libnetty.NettyClient;
 import com.zxm.libnetty.listener.SimpleOnConnectStatusListener;
+import com.zxm.libnetty.util.HeartUtil;
 import com.zxm.libnetty.util.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 import static com.zxm.libnetty.Constant.*;
 
@@ -47,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         findViewById(R.id.btn_start).setOnClickListener(this);
         findViewById(R.id.btn_exit).setOnClickListener(this);
-        findViewById(R.id.btn_build_receive_msg).setOnClickListener(this);
+        findViewById(R.id.btn_post_face).setOnClickListener(this);
 
         mInfoTv = findViewById(R.id.tv_info);
     }
@@ -57,8 +64,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.btn_build_connect:
                 //客户端并建立连接
-                final String ip = mIpEt.getText().toString().trim();
-                final String port = mPortEt.getText().toString().trim();
+//                final String ip = mIpEt.getText().toString().trim();
+//                final String port = mPortEt.getText().toString().trim();
 
                 NettyClient.getInstance()
                         .setConnectStatusListener(new SimpleOnConnectStatusListener() {
@@ -85,9 +92,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_exit://发送退出命令
                 NettyClient.getInstance().onPostCommand(Constant.CMD_EXIT);
                 break;
-            case R.id.btn_build_receive_msg:
-                //接收服务器消息
+            case R.id.btn_post_face://发送图片
+                sendFaceToServer();
                 break;
+        }
+    }
+
+    /**
+     * 原图
+     */
+    private void sendFaceToServer() {
+        final AssetManager manager = mContext.getAssets();
+        if (manager != null) {
+            try {
+                InputStream is = manager.open("test_face.jpg");
+                Bitmap src = ImageUtil.getBitmap(is);
+                final File filePath = new File(HeartUtil.getFaceCacheDir(mContext),
+                        "test_scale" + System.currentTimeMillis() + ".jpg");
+                Logger.e("文件路径:" + filePath.getAbsolutePath());
+                //压缩图片
+                //1.按缩放压缩图片640*480-->178kb
+                final Bitmap scaleBitmap = ImageUtil.compressByScale(src, 640, 480, true);
+                //2.按质量压缩图片
+//                final Bitmap qualityBitmap = ImageUtil.compressByQuality(src, 50, true);
+                //3.按采样率压缩
+//                final Bitmap sampleBitmap = ImageUtil.compressBySampleSize(src, 640, 480, true);
+                final boolean state = ImageUtil.save(scaleBitmap, filePath, Bitmap.CompressFormat.JPEG);
+                Logger.e("文件路径状态:" + state );
+                NettyClient.getInstance().onPostFaceFrame(scaleBitmap);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

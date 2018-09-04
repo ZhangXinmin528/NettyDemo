@@ -45,7 +45,6 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         Logger.d(TAG, "channel-->[id=" + ctx.channel().id() + "]" + " active");
-//        ctx.writeAndFlush(0x7FED0101);
         super.channelActive(ctx);
         if (connectStatusListener != null) {
             connectStatusListener.onConnected();
