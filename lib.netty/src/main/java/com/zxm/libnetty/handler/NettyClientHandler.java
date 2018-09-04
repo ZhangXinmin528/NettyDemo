@@ -1,7 +1,6 @@
 package com.zxm.libnetty.handler;
 
 import com.zxm.libnetty.listener.OnConnectStatusListener;
-import com.zxm.libnetty.listener.OnDataReceiveListener;
 import com.zxm.libnetty.util.FormatUtil;
 import com.zxm.libnetty.util.Logger;
 
@@ -24,8 +23,6 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
     private static final String TAG = NettyClientHandler.class.getSimpleName();
 
     private OnConnectStatusListener connectStatusListener;
-
-    private List<OnDataReceiveListener> listeners = new ArrayList<>();
 
     public NettyClientHandler() {
     }
@@ -120,14 +117,4 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
         this.connectStatusListener = connectStatusListener;
     }
 
-    /**
-     * 添加数据接收器
-     *
-     * @param listener
-     */
-    public void addDataReceiveListener(OnDataReceiveListener listener) {
-        if (listener != null) {
-            listeners.add(listener);
-        }
-    }
 }

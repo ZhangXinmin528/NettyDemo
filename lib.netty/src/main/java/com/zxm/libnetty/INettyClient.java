@@ -1,7 +1,5 @@
 package com.zxm.libnetty;
 
-import com.zxm.libnetty.listener.OnDataReceiveListener;
-
 /**
  * Created by ZhangXinmin on 2018/8/23.
  * Copyright (c) 2018 . All rights reserved.
@@ -54,10 +52,4 @@ public interface INettyClient {
      */
     void onShutDown();
 
-    /**
-     * 添加数据接收监听器
-     *
-     * @param listener
-     */
-    void addDataReceiveListener(OnDataReceiveListener listener);
 }

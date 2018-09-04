@@ -3,6 +3,7 @@ package com.zxm.libnetty.util;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Environment;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import java.io.BufferedOutputStream;
@@ -103,11 +104,12 @@ public final class HeartUtil {
      * @return bytes
      */
     public static byte[] bitmap2Bytes(final Bitmap bitmap,
+                                      @IntRange(from = 0, to = 100) int quality,
                                       @NonNull final Bitmap.CompressFormat format) {
 
         if (bitmap == null) return null;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(format, 100, baos);
+        bitmap.compress(format, quality, baos);
         return baos.toByteArray();
     }
 

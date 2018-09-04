@@ -18,15 +18,6 @@ public final class Constant {
      */
     public static final String CMD_START_CONFIRM = "7FED0101";
 
-    /**
-     * 人脸识别异常命令
-     */
-    public static final int CMD_FACE_VERIFY_ERROR = 0x7FEC0101;
-
-    /**
-     * 心率异常命令
-     */
-    public static final int CMD_HEART_RATE_ERROR = 0x7FEC0102;
 
     /**
      * 退出命令
@@ -37,5 +28,16 @@ public final class Constant {
      * 退出命令-->确认指令
      */
     public static final String CMD_EXIT_CONFIRM = "7FEA0101";
+
+    //上传人脸图片后
+    /**
+     * 人脸识别异常命令
+     */
+    public static final String CMD_FACE_VERIFY_ERROR = "7FEC0101";
+
+    /**
+     * 心率异常命令
+     */
+    public static final String CMD_HEART_RATE_ERROR = "7FEC0102";
 
 }

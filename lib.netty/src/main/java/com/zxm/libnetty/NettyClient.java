@@ -7,17 +7,19 @@ import android.text.TextUtils;
 
 import com.zxm.libnetty.handler.NettyClientHandler;
 import com.zxm.libnetty.listener.OnConnectStatusListener;
-import com.zxm.libnetty.listener.OnDataReceiveListener;
 import com.zxm.libnetty.util.FormatUtil;
 import com.zxm.libnetty.util.HeartUtil;
 import com.zxm.libnetty.util.Logger;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 
 import javax.net.ssl.SSLException;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -215,11 +217,12 @@ public final class NettyClient implements INettyClient {
      */
     public INettyClient onPostFaceFrame(@NonNull final Bitmap face) {
 
-        if (mChannel != null && face != null) {
+        if (mChannel != null) {
             final int width = face.getWidth();
             final int height = face.getHeight();
             Logger.d("onPostFaceFrame()..width:" + width + "..height:" + height);
-            final byte[] pic = HeartUtil.bitmap2Bytes(face, Bitmap.CompressFormat.JPEG);
+            final byte[] pic = HeartUtil.bitmap2Bytes(face, 90, Bitmap.CompressFormat.JPEG);
+
             final int faceLength = pic.length;
             Logger.d("onPostFaceFrame()..faceLength:" + faceLength);
             ByteBuf buf = Unpooled.buffer(faceLength + 4 + 2 * 2);
@@ -227,6 +230,10 @@ public final class NettyClient implements INettyClient {
             buf.writeShort(width);//图片宽度
             buf.writeShort(height);//图片高度
             buf.writeBytes(pic);
+
+            //打印16进制字符串
+            Logger.d("上传的16进制字符串：" + ByteBufUtil.hexDump(buf));
+
             mChannel.writeAndFlush(buf).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -235,6 +242,40 @@ public final class NettyClient implements INettyClient {
                     }
                 }
             });
+
+        }
+        return this;
+    }
+
+    /**
+     * 发送人脸帧图片
+     *
+     * @param src
+     * @return
+     */
+    public INettyClient onPostFaceFrame(@NonNull byte[] src) {
+
+        if (mChannel != null) {
+            final int faceLength = src.length;
+            Logger.d("onPostFaceFrame()..faceLength:" + faceLength);
+            ByteBuf buf = Unpooled.buffer(faceLength + 4 + 2 * 2);
+            buf.writeInt(faceLength);//图片
+            buf.writeShort(640);//图片宽度
+            buf.writeShort(480);//图片高度
+            buf.writeBytes(src);
+
+            //打印16进制字符串
+            Logger.d("上传的16进制字符串：" + ByteBufUtil.hexDump(buf));
+
+            mChannel.writeAndFlush(buf).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (future != null && future.isSuccess()) {
+                        Logger.d("onPostFaceFrame()..success");
+                    }
+                }
+            });
+
         }
         return this;
     }
@@ -281,13 +322,6 @@ public final class NettyClient implements INettyClient {
         if (mEventLoopGroup != null) {
             Logger.d("onShutDown()..shutdownGracefully");
             mEventLoopGroup.shutdownGracefully();
-        }
-    }
-
-    @Override
-    public void addDataReceiveListener(OnDataReceiveListener listener) {
-        if (mClientHandler != null) {
-            mClientHandler.addDataReceiveListener(listener);
         }
     }
 }
