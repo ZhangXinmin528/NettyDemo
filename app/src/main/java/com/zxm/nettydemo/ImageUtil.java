@@ -34,6 +34,7 @@ import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.View;
 
 import java.io.BufferedOutputStream;
@@ -488,6 +489,39 @@ public final class ImageUtil {
                               final boolean recycle) {
         if (isEmptyBitmap(src)) return null;
         Bitmap ret = Bitmap.createBitmap(src, x, y, width, height);
+        if (recycle && !src.isRecycled()) src.recycle();
+        return ret;
+    }
+
+    /**
+     * Return the clipped bitmap.
+     *
+     * @param src       The source of bitmap.
+     * @param maxWidth  The width.
+     * @param maxHeight The height.
+     * @param recycle   True to recycle the source of bitmap, false otherwise.
+     * @return the clipped bitmap
+     */
+    public static Bitmap clip(Bitmap src,
+                              int maxWidth,
+                              int maxHeight,
+                              boolean recycle) {
+        if (isEmptyBitmap(src)) return null;
+
+        Bitmap ret = null;
+        int bitmapWidth = src.getWidth();
+        int bitmapHeight = src.getHeight();
+        // 图片大于最大高宽，按大的值缩放
+        if (bitmapWidth > maxHeight || bitmapHeight > maxWidth) {
+            float widthScale = maxWidth * 1.0f / bitmapWidth;
+            float heightScale = maxHeight * 1.0f / bitmapHeight;
+
+            float scale = Math.min(widthScale, heightScale);
+            Matrix matrix = new Matrix();
+            matrix.postScale(scale, scale);
+            ret = Bitmap.createBitmap(src, 0, 0, bitmapWidth, bitmapHeight, matrix, false);
+            Log.e("zxm==", "face resize():" + ret.getWidth() + "*" + ret.getHeight());
+        }
         if (recycle && !src.isRecycled()) src.recycle();
         return ret;
     }
@@ -1481,7 +1515,8 @@ public final class ImageUtil {
      * @param format The format of the image.
      * @return {@code true}: success<br>{@code false}: fail
      */
-    public static boolean save(final Bitmap src, final File file, final Bitmap.CompressFormat format) {
+    public static boolean save(final Bitmap src, final File file,
+                               final Bitmap.CompressFormat format) {
         return save(src, file, format, false);
     }
 

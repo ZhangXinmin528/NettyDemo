@@ -3,7 +3,6 @@ package com.zxm.nettydemo;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -16,7 +15,6 @@ import com.zxm.libnetty.listener.SimpleOnConnectStatusListener;
 import com.zxm.libnetty.util.HeartUtil;
 import com.zxm.libnetty.util.Logger;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,23 +121,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final AssetManager manager = mContext.getAssets();
         if (manager != null) {
             try {
-//                InputStream is = manager.open("test_face.jpg");
-                InputStream is = manager.open("test_1.jpg");
+                InputStream is = manager.open("test_face.jpg");
+//                InputStream is = manager.open("test_1.jpg");
                 Bitmap src = ImageUtil.getBitmap(is);
                 final File filePath = new File(HeartUtil.getFaceCacheDir(mContext),
-                        "test" + System.currentTimeMillis() + ".jpg");
+                        "clip_200_200_" + System.currentTimeMillis() + ".jpg");
                 Logger.e("文件路径:" + filePath.getAbsolutePath());
 //        压缩图片
 //        1.按缩放压缩图片640*480-->178kb
-//                final Bitmap scaleBitmap = ImageUtil.compressByScale(src, 640, 480, true);
+                final Bitmap scaleBitmap = ImageUtil.compressByScale(src, 640, 480, false);
 //        2.按质量压缩图片
 //                final Bitmap qualityBitmap = ImageUtil.compressByQuality(src, 50, true);
 //        3.按采样率压缩
-//                final Bitmap sampleBitmap = ImageUtil.compressBySampleSize(src, 640, 480, true);
-                final boolean state = ImageUtil.save(src, filePath, Bitmap.CompressFormat.JPEG);
+//                final Bitmap sampleBitmap = ImageUtil.compressBySampleSize(src, 200, 200, false);
+                //4.裁剪图片
+                final Bitmap clipBitmap = ImageUtil.clip(scaleBitmap, 200, 200, false);
+
+                final boolean state = ImageUtil.save(clipBitmap, filePath, Bitmap.CompressFormat.JPEG);
                 Logger.e("文件路径状态:" + state);
 
-                NettyClient.getInstance().onPostFaceFrame(src);
+//                NettyClient.getInstance().onPostFaceFrame(src);
             } catch (IOException e) {
                 e.printStackTrace();
             }

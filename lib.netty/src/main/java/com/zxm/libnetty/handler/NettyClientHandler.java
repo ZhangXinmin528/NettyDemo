@@ -45,7 +45,6 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
         super.channelActive(ctx);
         if (connectStatusListener != null) {
             connectStatusListener.onConnected();
-
         }
     }
 

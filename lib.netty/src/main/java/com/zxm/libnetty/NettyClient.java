@@ -232,16 +232,16 @@ public final class NettyClient implements INettyClient {
             buf.writeBytes(pic);
 
             //打印16进制字符串
-            Logger.d("上传的16进制字符串：" + ByteBufUtil.hexDump(buf));
+//            Logger.d("上传的16进制字符串：" + ByteBufUtil.hexDump(buf));
 
-            mChannel.writeAndFlush(buf).addListener(new ChannelFutureListener() {
+            /*mChannel.writeAndFlush(buf).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future != null && future.isSuccess()) {
                         Logger.d("onPostFaceFrame()..success");
                     }
                 }
-            });
+            });*/
 
         }
         return this;
